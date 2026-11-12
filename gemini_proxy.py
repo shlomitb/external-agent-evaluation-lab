@@ -3,6 +3,9 @@ import os
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(title="Gemini Compatibility Proxy")
 
@@ -31,20 +34,20 @@ async def chat_completions(request: Request):
     # Gemini does not accept the OpenAI "store" field.
     payload.pop("store", None)
 
-    print("REQUEST SUMMARY", flush=True)
-    print("Model:", payload.get("model"), flush=True)
-    print("Top-level fields:", list(payload.keys()), flush=True)
-
-    for message in payload.get("messages", []):
-        content = message.get("content", "")
-        print(
-            f"Message role={message.get('role')}, "
-            f"content length={len(str(content))}, "
-            f"preview={str(content)[:150]!r}",
-            flush=True,
-        )
-
-    print("Tools:", len(payload.get("tools", [])), flush=True)
+    # print("REQUEST SUMMARY", flush=True)
+    # print("Model:", payload.get("model"), flush=True)
+    # print("Top-level fields:", list(payload.keys()), flush=True)
+    #
+    # for message in payload.get("messages", []):
+    #     content = message.get("content", "")
+    #     print(
+    #         f"Message role={message.get('role')}, "
+    #         f"content length={len(str(content))}, "
+    #         f"preview={str(content)[:150]!r}",
+    #         flush=True,
+    #     )
+    #
+    # print("Tools:", len(payload.get("tools", [])), flush=True)
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -58,7 +61,8 @@ async def chat_completions(request: Request):
                 json=payload,
                 headers=headers,
             )
-        except httpx.RequestError:
+        except httpx.RequestError as exc:
+            print("GEMINI CONNECTION ERROR:", repr(exc), flush=True)
             raise HTTPException(
                 status_code=502,
                 detail="Could not connect to the Gemini API",
